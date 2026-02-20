@@ -1,0 +1,75 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id            String       @id @default(cuid())
+  name          String
+  walletAddress String
+  chain         String       @default("ethereum")
+  balance       Float        @default(0)
+  employees     Employee[]
+  payrollRuns   PayrollRun[]
+  createdAt     DateTime     @default(now())
+}
+
+model Employee {
+  id            String            @id @default(cuid())
+  name          String
+  email         String
+  companyId     String
+  company       Company           @relation(fields: [companyId], references: [id])
+  walletAddress String?
+  allocations   TokenAllocation[]
+  payHistory    PayEvent[]
+  createdAt     DateTime          @default(now())
+}
+
+model TokenAllocation {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  tokenSymbol  String
+  tokenAddress String
+  chainId      Int
+  chainName    String
+  percentage   Float
+  updatedAt    DateTime @updatedAt
+}
+
+model PayrollRun {
+  id          String     @id @default(cuid())
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id])
+  totalAmount Float
+  currency    String     @default("USDC")
+  status      String     @default("pending")
+  payEvents   PayEvent[]
+  executedAt  DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model PayEvent {
+  id           String     @id @default(cuid())
+  employeeId   String
+  employee     Employee   @relation(fields: [employeeId], references: [id])
+  payrollRunId String
+  payrollRun   PayrollRun @relation(fields: [payrollRunId], references: [id])
+  amountUSDC   Float
+  toToken      String
+  toChain      String
+  toChainId    Int
+  toAddress    String
+  relayQuoteId String?
+  relayTxHash  String?
+  status       String     @default("pending")
+  relayFeeBps  Float?
+  relayFeeUSD  Float?
+  createdAt    DateTime   @default(now())
+}
