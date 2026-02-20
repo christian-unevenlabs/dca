@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const company = await prisma.company.findUniqueOrThrow({
@@ -21,7 +23,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       },
     })
     return NextResponse.json(company)
-  } catch {
-    return NextResponse.json({ error: 'Company not found' }, { status: 404 })
+  } catch (err) {
+    const msg = (err as Error).message ?? 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
